@@ -1,0 +1,9 @@
+mainWindowTitle = "Tablet data presenter"
+backgroundColor = "#333"
+windowPadding = 20
+buttonsPadding = (5, 5, 5, 5)
+buttonsFont = "serif 10"
+windowElementsHeight = 600
+imageCanvasWidth = 600
+buttonsFrameWidth = 200
+loadFileButtonText = "Load file"
