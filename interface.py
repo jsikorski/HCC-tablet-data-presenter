@@ -1,6 +1,8 @@
 from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X
 from ttk import Frame, Button, Style
 from settings import *
+import tkFileDialog
+from loaderHTD import DataHTD
 
 class MainWindow(Tk):
     def __init__(self):
@@ -22,7 +24,7 @@ class MainWindow(Tk):
                           pady=windowPadding, fill=BOTH)
         
     def __setStyles(self):
-        Style().configure("TButton", padding=buttonsPadding, font=buttonsFont)
+        Style().configure("TButton", padding=buttonsTextPadding, font=buttonsFont)
         Style().configure("TFrame", background=backgroundColor)
 
 
@@ -30,6 +32,7 @@ class ImageCanvas(Canvas):
     def __init__(self, master):
         Canvas.__init__(self, master, width=imageCanvasWidth, 
                         height=windowElementsHeight)
+
 
 class ButtonsFrame(Frame):
     def __init__(self, master):
@@ -39,5 +42,17 @@ class ButtonsFrame(Frame):
         
     def __initializeComponents(self):
         self.propagate(0)
-        loadFileButton = Button(master=self, text=loadFileButtonText)
-        loadFileButton.pack(fill=X);
+        loadFileButton = LoadFileButton(master=self)
+        loadFileButton.pack(fill=X, pady = buttonsPadding);
+
+
+class LoadFileButton(Button):  
+    def onClick(self):
+        fileName = tkFileDialog.askopenfilename(filetypes=[('HTD files', '*.htd')])
+        if (fileName):
+            htd = DataHTD(fileName)
+            print htd.header[0]
+      
+    def __init__(self, master):
+        Button.__init__(self, master, text=loadFileButtonText, 
+                        command = self.onClick)        
