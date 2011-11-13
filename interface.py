@@ -1,9 +1,9 @@
-from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X
-from ttk import Frame, Button, Style
+from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, StringVar
+from ttk import Frame, Button, Style, OptionMenu, Combobox
 from settings import *
-import tkFileDialog
 from loaderHTD import DataHTD
-from Tkconstants import ALL
+import tkFileDialog
+from Tkconstants import DISABLED, NORMAL
 
 class MainWindow(Tk):
     def __init__(self):
@@ -26,9 +26,11 @@ class MainWindow(Tk):
         self.loadFileButton = Button(master=self.buttonsFrame,
                                      text=loadFileButtonText, command=self.loadFileButtonClick)
         self.loadFileButton.pack(fill=X, pady=buttonsPadding);
-        self.redrawButton = Button(master=self.buttonsFrame,
-                                   text=redrawButtonText, command=self.redrawButtonClick)
+        self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText, 
+                                   state=DISABLED, command=self.redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
+        self.optionsComboBox = Combobox(self.buttonsFrame, values = ["a", "b", "c"])
+        self.optionsComboBox.pack(fill=X, pady=buttonsPadding)
         self.buttonsFrame.pack(side=RIGHT, padx=windowPadding, pady=windowPadding, fill=BOTH)
         
     def __setStyles(self):
@@ -39,6 +41,7 @@ class MainWindow(Tk):
         if (fileName):
             htd = DataHTD(fileName)
             self.draw(htd.packages)
+            self.redrawButton.config(state = NORMAL)
         
     def redrawButtonClick(self):
         print "Redraw!"
