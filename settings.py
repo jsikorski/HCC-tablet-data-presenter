@@ -1,5 +1,4 @@
 mainWindowTitle = "Tablet data presenter"
-backgroundColor = "#333"
 windowPadding = 20
 buttonsTextPadding = (5, 5, 5, 5)
 buttonsFont = "serif 10"
@@ -10,3 +9,4 @@ loadFileButtonText = "Load file"
 buttonsPadding = (0, 15)
 dataXNumber = 1
 dataYNumber = 2
+redrawButtonText = "Redraw"
