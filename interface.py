@@ -13,11 +13,11 @@ class MainWindow(Tk):
         self.configure(bg=backgroundColor)        
         self.__initializeComponents()
         self.mainloop()
-    
+            
     def __initializeComponents(self):
-        imageCanvas = ImageCanvas(master=self)
-        imageCanvas.pack(side=LEFT, padx=(windowPadding, 0), 
-                         pady=windowPadding, fill=BOTH)
+        self.imageCanvas = ImageCanvas(master=self)
+        self.imageCanvas.pack(side=LEFT, padx=(windowPadding, 0), 
+                              pady=windowPadding, fill=BOTH)
         
         buttonsFrame = ButtonsFrame(master=self)
         buttonsFrame.pack(side=RIGHT, padx=windowPadding, 
@@ -32,6 +32,27 @@ class ImageCanvas(Canvas):
     def __init__(self, master):
         Canvas.__init__(self, master, width=imageCanvasWidth, 
                         height=windowElementsHeight)
+        
+    def draw(self, dataPackages):
+        ratio = self.getRatio(dataPackages)
+        for package in dataPackages:
+            self.create_rectangle(package[1] * ratio, package[2] * ratio, 
+                                  package[1] * ratio, package[2] * ratio)
+            
+    def getRatio(self, dataPackages):
+        minX = min(dataPackages, key=lambda x: x[1])[1]
+        maxX = max(dataPackages, key=lambda x: x[1])[1]
+        
+        minY = min(dataPackages, key=lambda x: x[2])[2]
+        maxY = max(dataPackages, key=lambda x: x[2])[2]
+        
+        xLength = maxX - minX
+        yLength = maxY - minY
+        
+        if (xLength > yLength):
+            return float(imageCanvasWidth) / xLength
+        else:
+            return float(windowElementsHeight) / yLength
 
 
 class ButtonsFrame(Frame):
@@ -51,7 +72,7 @@ class LoadFileButton(Button):
         fileName = tkFileDialog.askopenfilename(filetypes=[('HTD files', '*.htd')])
         if (fileName):
             htd = DataHTD(fileName)
-            print htd.header[0]
+            self.master.master.imageCanvas.draw(htd.packages)
       
     def __init__(self, master):
         Button.__init__(self, master, text=loadFileButtonText, 
