@@ -34,17 +34,21 @@ class ImageCanvas(Canvas):
                         height=windowElementsHeight)
         
     def draw(self, dataPackages):
-        ratio = self.getRatio(dataPackages)
-        for package in dataPackages:
-            self.create_rectangle(package[1] * ratio, package[2] * ratio, 
-                                  package[1] * ratio, package[2] * ratio)
-            
-    def getRatio(self, dataPackages):
-        minX = min(dataPackages, key=lambda x: x[1])[1]
-        maxX = max(dataPackages, key=lambda x: x[1])[1]
+        ratio = self.__getRatio(dataPackages)
+        minX = self.__getMinimalValue(dataPackages, dataXNumber)
+        minY = self.__getMinimalValue(dataPackages, dataYNumber)
         
-        minY = min(dataPackages, key=lambda x: x[2])[2]
-        maxY = max(dataPackages, key=lambda x: x[2])[2]
+        for package in dataPackages:
+            x = (package[dataXNumber] - minX) * ratio
+            y = (package[dataYNumber] - minY) * ratio
+            self.create_rectangle(x, y, x, y)
+
+    def __getRatio(self, dataPackages):
+        minX = self.__getMinimalValue(dataPackages, dataXNumber)
+        maxX = self.__getMaximalValue(dataPackages, dataXNumber)
+        
+        minY = self.__getMinimalValue(dataPackages, dataYNumber)
+        maxY = self.__getMaximalValue(dataPackages, dataYNumber)
         
         xLength = maxX - minX
         yLength = maxY - minY
@@ -54,6 +58,12 @@ class ImageCanvas(Canvas):
         else:
             return float(windowElementsHeight) / yLength
 
+    def __getMinimalValue(self, dataPackages, valueNumber):
+        return min(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
+            
+    def __getMaximalValue(self, dataPackages, valueNumber):
+        return max(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
+        
 
 class ButtonsFrame(Frame):
     def __init__(self, master):

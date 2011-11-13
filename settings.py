@@ -8,3 +8,5 @@ imageCanvasWidth = 600
 buttonsFrameWidth = 200
 loadFileButtonText = "Load file"
 buttonsPadding = (0, 15)
+dataXNumber = 1
+dataYNumber = 2
