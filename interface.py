@@ -1,13 +1,15 @@
-from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, StringVar
-from ttk import Frame, Button, Style, OptionMenu, Combobox
+from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL
+from ttk import Frame, Button, Style, Combobox
 from settings import *
 from loaderHTD import DataHTD
 import tkFileDialog
 from Tkconstants import DISABLED, NORMAL
+from colors import HSVGradientGenerator
 
 class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
+        self.hsv = HSVGradientGenerator(50)
         self.title(mainWindowTitle)
         self.resizable(width=0, height=0)
         self.__setStyles()
@@ -20,16 +22,16 @@ class MainWindow(Tk):
         self.imageCanvas.pack(side=LEFT, padx=(windowPadding, 0),
                               pady=windowPadding, fill=BOTH)
         
-        self.buttonsFrame = Frame(master=self, width=buttonsFrameWidth, 
+        self.buttonsFrame = Frame(master=self, width=buttonsFrameWidth,
                                   height=windowElementsHeight)
         self.buttonsFrame.propagate(0)
         self.loadFileButton = Button(master=self.buttonsFrame,
                                      text=loadFileButtonText, command=self.loadFileButtonClick)
         self.loadFileButton.pack(fill=X, pady=buttonsPadding);
-        self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText, 
+        self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText,
                                    state=DISABLED, command=self.redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
-        self.optionsComboBox = Combobox(self.buttonsFrame, values = ["a", "b", "c"])
+        self.optionsComboBox = Combobox(self.buttonsFrame, values=["a", "b", "c"])
         self.optionsComboBox.pack(fill=X, pady=buttonsPadding)
         self.buttonsFrame.pack(side=RIGHT, padx=windowPadding, pady=windowPadding, fill=BOTH)
         
@@ -41,7 +43,7 @@ class MainWindow(Tk):
         if (fileName):
             htd = DataHTD(fileName)
             self.draw(htd.packages)
-            self.redrawButton.config(state = NORMAL)
+            self.redrawButton.config(state=NORMAL)
         
     def redrawButtonClick(self):
         print "Redraw!"
@@ -59,7 +61,9 @@ class MainWindow(Tk):
         for package in dataPackages:
             x = (package[dataXNumber] - minX) * ratio
             y = (package[dataYNumber] - minY) * ratio
-            self.imageCanvas.create_rectangle(x, y, x, y)
+            color = self.hsv.getColorByValue(-50.0, 50.0, package[2])
+            tk_rgb = "#%02x%02x%02x" % color
+            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
 
     def redraw(self):
         self.draw(self.lastPackages)
