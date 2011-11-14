@@ -21,3 +21,5 @@ colorByValuesDictionary = {colorByTimeOption: 0,
                            colorByPressureOption: 3,
                            colorByAzimuthOption: 4,
                            colorByAltitudeOption: 5}
+
+defaultColorsTableLength = 50

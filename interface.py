@@ -1,5 +1,6 @@
-from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL
-from ttk import Frame, Button, Style, Combobox, Label
+from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, Spinbox
+from ttk import Frame, Button, Style, Combobox, Label, Labelframe, Checkbutton,\
+    Entry
 from settings import *
 from localization import *
 from loaderHTD import DataHTD
@@ -35,6 +36,12 @@ class MainWindow(Tk):
                                         values=colorByComboBoxValues)
         self.colorByComboBox.set(colorByComboBoxValues[0])
         self.colorByComboBox.pack(fill=X, pady=buttonsPadding)
+        self.colorsSettingsPanel = Labelframe(self.buttonsFrame, text=visualisationSettingsPanelText)
+        self.colorsTableLengthLabel = Label(self.colorsSettingsPanel, text = colorsTableLengthLabelText)
+        self.colorsTableLengthLabel.pack(fill=X)
+        self.colorsTableLengthEntry = Entry(self.colorsSettingsPanel, state = DISABLED)
+        self.colorsTableLengthEntry.pack(fill=X)
+        self.colorsSettingsPanel.pack(fill=X, pady=buttonsPadding)
         self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText,
                                    state=DISABLED, command=self.redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
@@ -50,6 +57,7 @@ class MainWindow(Tk):
             self.draw(htd.packages)
             self.redrawButton.config(state=NORMAL)
             self.colorByComboBox.config(state="readonly")
+            self.colorsTableLengthEntry.config(state=NORMAL)
         
     def redrawButtonClick(self):
         self.draw(self.lastPackages)
