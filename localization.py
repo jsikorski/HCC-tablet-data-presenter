@@ -1,0 +1,8 @@
+mainWindowTitle = "Tablet data presenter"
+redrawButtonText = "Redraw"
+colorByLabelText = "Color by:"
+colorByNoneOption = "None"
+colorByTimeOption = "Time"
+colorByPressureOption = "Pressure"
+colorByAzimuthOption = "Azimuth"
+colorByAltitudeOption = "Altitude"

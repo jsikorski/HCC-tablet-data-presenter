@@ -1,6 +1,7 @@
 from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL
-from ttk import Frame, Button, Style, Combobox
+from ttk import Frame, Button, Style, Combobox, Label
 from settings import *
+from localization import *
 from loaderHTD import DataHTD
 import tkFileDialog
 from Tkconstants import DISABLED, NORMAL
@@ -28,11 +29,15 @@ class MainWindow(Tk):
         self.loadFileButton = Button(master=self.buttonsFrame,
                                      text=loadFileButtonText, command=self.loadFileButtonClick)
         self.loadFileButton.pack(fill=X, pady=buttonsPadding);
+        self.colorByLabel = Label(self.buttonsFrame, text=colorByLabelText)
+        self.colorByLabel.pack(fill=X)
+        self.colorByComboBox = Combobox(self.buttonsFrame, state=DISABLED,
+                                        values=colorByComboBoxValues)
+        self.colorByComboBox.set(colorByComboBoxValues[0])
+        self.colorByComboBox.pack(fill=X, pady=buttonsPadding)
         self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText,
                                    state=DISABLED, command=self.redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
-        self.optionsComboBox = Combobox(self.buttonsFrame, values=["a", "b", "c"])
-        self.optionsComboBox.pack(fill=X, pady=buttonsPadding)
         self.buttonsFrame.pack(side=RIGHT, padx=windowPadding, pady=windowPadding, fill=BOTH)
         
     def __setStyles(self):
@@ -44,9 +49,10 @@ class MainWindow(Tk):
             htd = DataHTD(fileName)
             self.draw(htd.packages)
             self.redrawButton.config(state=NORMAL)
+            self.colorByComboBox.config(state="readonly")
         
     def redrawButtonClick(self):
-        print "Redraw!"
+        self.draw(self.lastPackages)
         
     def draw(self, dataPackages):
         self.lastPackages = dataPackages
@@ -57,16 +63,24 @@ class MainWindow(Tk):
         maxX = self.__getMaximum(dataPackages, dataXNumber)
         maxY = self.__getMaximum(dataPackages, dataYNumber)
         ratio = self.__getRatio(minX, minY, maxX, maxY)
+            
+        colorBy = self.colorByComboBox.get()
+        if (colorBy != colorByNoneOption):
+            colorByNumber = colorByValuesDictionary[colorBy]
+            a = float(self.__getMinimum(dataPackages, colorByNumber))
+            b = float(self.__getMaximum(dataPackages, colorByNumber))
                 
         for package in dataPackages:
             x = (package[dataXNumber] - minX) * ratio
             y = (package[dataYNumber] - minY) * ratio
-            color = self.hsv.getColorByValue(-50.0, 50.0, package[2])
+            
+            if (colorBy != colorByNoneOption):
+                color = self.hsv.getColorByValue(a, b, package[colorByNumber])
+            else:
+                color = (0, 0, 0)
+                
             tk_rgb = "#%02x%02x%02x" % color
             self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
-
-    def redraw(self):
-        self.draw(self.lastPackages)
 
     def __getRatio(self, minX, minY, maxX, maxY):
         xLength = maxX - minX
