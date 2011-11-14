@@ -1,5 +1,6 @@
 from localization import colorByTimeOption, colorByAzimuthOption, colorByAltitudeOption, \
-    colorByPressureOption, colorByNoneOption
+    colorByPressureOption, colorByNoneOption, relativeScaleType,\
+    absoluteScaleType
 
 windowPadding = 20
 buttonsTextPadding = (5, 5, 5, 5)
@@ -11,15 +12,17 @@ loadFileButtonText = "Load file"
 buttonsPadding = (0, 15)
 dataXNumber = 1
 dataYNumber = 2
-colorByComboBoxValues = [colorByNoneOption,
+colorByComboboxValues = [colorByNoneOption,
                          colorByTimeOption,
                          colorByPressureOption,
                          colorByAzimuthOption,
                          colorByAltitudeOption]
-
 colorByValuesDictionary = {colorByTimeOption: 0,
                            colorByPressureOption: 3,
                            colorByAzimuthOption: 4,
                            colorByAltitudeOption: 5}
-
 defaultColorsTableLength = 50
+defaultColorsTableMin = 0
+defaultColorsTableMax = 100
+scaleTypesComboboxValues = [relativeScaleType, 
+                            absoluteScaleType]

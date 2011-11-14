@@ -1,17 +1,15 @@
-from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, Spinbox
-from ttk import Frame, Button, Style, Combobox, Label, Labelframe, Checkbutton,\
-    Entry
-from settings import *
-from localization import *
+from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, DISABLED, NORMAL
+from ttk import Frame, Button, Style, Combobox, Label, Labelframe, Entry
+from settings import * #@UnusedWildImport
+from localization import * #@UnusedWildImport
 from loaderHTD import DataHTD
 import tkFileDialog
-from Tkconstants import DISABLED, NORMAL
+import tkMessageBox
 from colors import HSVGradientGenerator
 
 class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
-        self.hsv = HSVGradientGenerator(50)
         self.title(mainWindowTitle)
         self.resizable(width=0, height=0)
         self.__setStyles()
@@ -30,18 +28,42 @@ class MainWindow(Tk):
         self.loadFileButton = Button(master=self.buttonsFrame,
                                      text=loadFileButtonText, command=self.loadFileButtonClick)
         self.loadFileButton.pack(fill=X, pady=buttonsPadding);
+        
         self.colorByLabel = Label(self.buttonsFrame, text=colorByLabelText)
         self.colorByLabel.pack(fill=X)
-        self.colorByComboBox = Combobox(self.buttonsFrame, state=DISABLED,
-                                        values=colorByComboBoxValues)
-        self.colorByComboBox.set(colorByComboBoxValues[0])
-        self.colorByComboBox.pack(fill=X, pady=buttonsPadding)
+        self.colorByCombobox = Combobox(self.buttonsFrame, state=DISABLED,
+                                        values=colorByComboboxValues)
+        self.colorByCombobox.set(colorByComboboxValues[0])
+        self.colorByCombobox.pack(fill=X, pady=buttonsPadding)
+        
         self.colorsSettingsPanel = Labelframe(self.buttonsFrame, text=visualisationSettingsPanelText)
-        self.colorsTableLengthLabel = Label(self.colorsSettingsPanel, text = colorsTableLengthLabelText)
+        self.colorsTableLengthLabel = Label(self.colorsSettingsPanel, text=colorsTableLengthLabelText)
         self.colorsTableLengthLabel.pack(fill=X)
-        self.colorsTableLengthEntry = Entry(self.colorsSettingsPanel, state = DISABLED)
+        self.colorsTableLengthEntry = Entry(self.colorsSettingsPanel)
+        self.colorsTableLengthEntry.insert(0, defaultColorsTableLength)
+        self.colorsTableLengthEntry.config(state=DISABLED)
         self.colorsTableLengthEntry.pack(fill=X)
+        self.scaleTypeLabel = Label(self.colorsSettingsPanel, text=scaleTypeLabelText)
+        self.scaleTypeLabel.pack(fill=X)
+        self.scaleTypeCombobox = Combobox(self.colorsSettingsPanel, state=DISABLED,
+                                          values=scaleTypesComboboxValues)
+        self.scaleTypeCombobox.set(scaleTypesComboboxValues[0])
+        self.scaleTypeCombobox.bind("<<ComboboxSelected>>", self.scaleTypeComboboxChange)
+        self.scaleTypeCombobox.pack(fill=X)
+        self.colorsTableMinLabel = Label(self.colorsSettingsPanel, text=colorsTableMaxLabelText)
+        self.colorsTableMinLabel.pack(fill=X)
+        self.colorsTableMinEntry = Entry(self.colorsSettingsPanel)
+        self.colorsTableMinEntry.insert(0, defaultColorsTableMin)
+        self.colorsTableMinEntry.config(state=DISABLED)
+        self.colorsTableMinEntry.pack(fill=X)
+        self.colorsTableMaxLabel = Label(self.colorsSettingsPanel, text=colorsTableMaxLabelText)
+        self.colorsTableMaxLabel.pack(fill=X)
+        self.colorsTableMaxEntry = Entry(self.colorsSettingsPanel)
+        self.colorsTableMaxEntry.insert(0, defaultColorsTableMax)
+        self.colorsTableMaxEntry.config(state=DISABLED)
+        self.colorsTableMaxEntry.pack(fill=X)
         self.colorsSettingsPanel.pack(fill=X, pady=buttonsPadding)
+        
         self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText,
                                    state=DISABLED, command=self.redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
@@ -55,24 +77,41 @@ class MainWindow(Tk):
         if (fileName):
             htd = DataHTD(fileName)
             self.draw(htd.packages)
+            
             self.redrawButton.config(state=NORMAL)
-            self.colorByComboBox.config(state="readonly")
+            self.colorByCombobox.config(state="readonly")
             self.colorsTableLengthEntry.config(state=NORMAL)
-        
+            self.scaleTypeCombobox.config(state="readonly")
+            
     def redrawButtonClick(self):
         self.draw(self.lastPackages)
+
+    def scaleTypeComboboxChange(self, event):
+        if (self.scaleTypeCombobox.get() == relativeScaleType):
+            self.colorsTableMinEntry.config(state=DISABLED)
+            self.colorsTableMaxEntry.config(state=DISABLED)
+        else:
+            self.colorsTableMinEntry.config(state=NORMAL)
+            self.colorsTableMaxEntry.config(state=NORMAL)
         
     def draw(self, dataPackages):
         self.lastPackages = dataPackages
         self.imageCanvas.delete(ALL)
 
+        try:
+            colorsTableLength = int(self.colorsTableLengthEntry.get())
+        except:
+            tkMessageBox.showinfo(errorMessageTitle, errorMessageText)
+            return
+
+        hsv = HSVGradientGenerator(colorsTableLength)
         minX = self.__getMinimum(dataPackages, dataXNumber)
         minY = self.__getMinimum(dataPackages, dataYNumber)
         maxX = self.__getMaximum(dataPackages, dataXNumber)
         maxY = self.__getMaximum(dataPackages, dataYNumber)
         ratio = self.__getRatio(minX, minY, maxX, maxY)
             
-        colorBy = self.colorByComboBox.get()
+        colorBy = self.colorByCombobox.get()
         if (colorBy != colorByNoneOption):
             colorByNumber = colorByValuesDictionary[colorBy]
             a = float(self.__getMinimum(dataPackages, colorByNumber))
@@ -83,7 +122,7 @@ class MainWindow(Tk):
             y = (package[dataYNumber] - minY) * ratio
             
             if (colorBy != colorByNoneOption):
-                color = self.hsv.getColorByValue(a, b, package[colorByNumber])
+                color = hsv.getColorByValue(a, b, package[colorByNumber])
             else:
                 color = (0, 0, 0)
                 
