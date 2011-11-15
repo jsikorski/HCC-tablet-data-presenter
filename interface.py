@@ -6,6 +6,7 @@ from loaderHTD import DataHTD
 import tkFileDialog
 import tkMessageBox
 from colors import HSVGradientGenerator
+from math import sqrt
 
 class MainWindow(Tk):
     def __init__(self):
@@ -80,7 +81,7 @@ class MainWindow(Tk):
                 return
             
             htd = DataHTD(fileName)
-            self.draw(htd.packages)
+            self.__draw(htd.packages)
             
             self.redrawButton.config(state=NORMAL)
             self.colorByCombobox.config(state="readonly")
@@ -92,7 +93,7 @@ class MainWindow(Tk):
             self.__showInvalidInputMessage()
             return
         
-        self.draw(self.lastPackages)
+        self.__draw(self.lastPackages)
 
     def scaleTypeComboboxChange(self, event):
         if (self.scaleTypeCombobox.get() == relativeScaleType):
@@ -102,7 +103,7 @@ class MainWindow(Tk):
             self.colorsTableMinEntry.config(state=NORMAL)
             self.colorsTableMaxEntry.config(state=NORMAL)
         
-    def draw(self, dataPackages):
+    def __draw(self, dataPackages):
         self.lastPackages = dataPackages
         self.imageCanvas.delete(ALL)
 
@@ -114,28 +115,94 @@ class MainWindow(Tk):
         ratio = self.__getRatio(minX, minY, maxX, maxY)
             
         colorBy = self.colorByCombobox.get()
-        if (colorBy != colorByNoneOption):
-            colorByNumber = colorByValuesDictionary[colorBy]
-            if (self.scaleTypeCombobox.get() == relativeScaleType):
-                colorsTableMinValue = float(self.__getMinimum(dataPackages, colorByNumber))
-                colorsTableMaxValue = float(self.__getMaximum(dataPackages, colorByNumber))
-            else:
-                colorsTableMinValue = self.colorsTableMinValue
-                colorsTableMaxValue = self.colorsTableMaxValue
+        if (colorBy == colorByNoneOption):
+            self.__drawColorByNone(dataPackages, minX, minY, ratio)
+            return
+        if (colorBy == colorBySpeedOption):
+            self.__drawColorBySpeed(dataPackages, minX, minY, ratio, hsv)
+            return
+            
+        colorByNumber = colorByValuesDictionary[colorBy]
+        
+        if (self.scaleTypeCombobox.get() == relativeScaleType):
+            colorsTableMinValue = float(self.__getMinimum(dataPackages, colorByNumber))
+            colorsTableMaxValue = float(self.__getMaximum(dataPackages, colorByNumber))
+        else:
+            colorsTableMinValue = self.colorsTableMinValue
+            colorsTableMaxValue = self.colorsTableMaxValue
             
         for package in dataPackages:
             x = (package[dataXNumber] - minX) * ratio
             y = (package[dataYNumber] - minY) * ratio
             
-            if (colorBy != colorByNoneOption):
-                color = hsv.getColorByValue(colorsTableMinValue, 
-                                            colorsTableMaxValue, 
-                                            package[colorByNumber])
-            else:
-                color = (0, 0, 0)
+            color = hsv.getColorByValue(colorsTableMinValue,
+                                        colorsTableMaxValue,
+                                        package[colorByNumber])
                 
             tk_rgb = "#%02x%02x%02x" % color
             self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
+
+    def __drawColorByNone(self, dataPackages, minX, minY, ratio):
+        for package in dataPackages:
+            x = (package[dataXNumber] - minX) * ratio
+            y = (package[dataYNumber] - minY) * ratio
+            
+            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=defaultDrawingColor)
+            
+    def __drawColorBySpeed(self, dataPackages, minX, minY, ratio, hsv):   
+        allSpeeds = self.__getAllSpeed(dataPackages)
+        minSpeed = min(allSpeeds)
+        maxSpeed = max(allSpeeds)
+        
+        if (self.scaleTypeCombobox.get() == relativeScaleType):
+            colorsTableMinValue = minSpeed
+            colorsTableMaxValue = maxSpeed
+        else:
+            colorsTableMinValue = self.colorsTableMinValue
+            colorsTableMaxValue = self.colorsTableMaxValue
+        
+        i = 0
+        for package in dataPackages:
+            x = (package[dataXNumber] - minX) * ratio
+            y = (package[dataYNumber] - minY) * ratio
+            
+            color = hsv.getColorByValue(colorsTableMinValue,
+                                        colorsTableMaxValue,
+                                        allSpeeds[i])
+                
+            tk_rgb = "#%02x%02x%02x" % color
+            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
+            i += 1
+        
+    def __getAllSpeed(self, dataPackages):
+        allSpeeds = []
+        
+        lastPackage = None
+        for package in dataPackages:
+            if (not lastPackage):
+                speed = 0
+            else:
+                currTime = package[dataTimeNumber]
+                currX = package[dataXNumber]
+                currY = package[dataYNumber]
+                lastTime = lastPackage[dataTimeNumber]
+                lastX = lastPackage[dataXNumber]
+                lastY = lastPackage[dataYNumber]
+                dx = self.__getDistance(lastX, lastY, currX, currY)
+                dt = currTime - lastTime
+                if (dt == 0):
+                    speed = 0
+                else:
+                    speed = dx / dt
+                
+            lastPackage = package
+            allSpeeds.append(speed)
+        return allSpeeds
+        
+    def __getDistance(self, firstX, firstY, secondX, secondY):
+        xx = secondX - firstX
+        yy = secondY - firstX
+        return sqrt(pow(xx, 2) + pow(yy, 2))
 
     def __getRatio(self, minX, minY, maxX, maxY):
         xLength = maxX - minX

@@ -1,4 +1,4 @@
-from localization import colorByTimeOption, colorByAzimuthOption, colorByAltitudeOption, \
+from localization import colorBySpeedOption, colorByAzimuthOption, colorByAltitudeOption, \
     colorByPressureOption, colorByNoneOption, relativeScaleType,\
     absoluteScaleType
 
@@ -10,15 +10,15 @@ imageCanvasWidth = 600
 buttonsFrameWidth = 200
 loadFileButtonText = "Load file"
 buttonsPadding = (0, 15)
+dataTimeNumber = 0
 dataXNumber = 1
 dataYNumber = 2
 colorByComboboxValues = [colorByNoneOption,
-                         colorByTimeOption,
+                         colorBySpeedOption,
                          colorByPressureOption,
                          colorByAzimuthOption,
                          colorByAltitudeOption]
-colorByValuesDictionary = {colorByTimeOption: 0,
-                           colorByPressureOption: 3,
+colorByValuesDictionary = {colorByPressureOption: 3,
                            colorByAzimuthOption: 4,
                            colorByAltitudeOption: 5}
 defaultColorsTableLength = 50
@@ -26,3 +26,4 @@ defaultColorsTableMin = 0
 defaultColorsTableMax = 100
 scaleTypesComboboxValues = [relativeScaleType, 
                             absoluteScaleType]
+defaultDrawingColor = "black"
