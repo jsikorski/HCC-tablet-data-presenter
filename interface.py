@@ -75,6 +75,10 @@ class MainWindow(Tk):
     def loadFileButtonClick(self):
         fileName = tkFileDialog.askopenfilename(filetypes=[('HTD files', '*.htd')])
         if (fileName):
+            if (not self.__getInputData()):
+                self.__showInvalidInputMessage()
+                return
+            
             htd = DataHTD(fileName)
             self.draw(htd.packages)
             
@@ -84,6 +88,10 @@ class MainWindow(Tk):
             self.scaleTypeCombobox.config(state="readonly")
             
     def redrawButtonClick(self):
+        if (not self.__getInputData()):
+            self.__showInvalidInputMessage()
+            return
+        
         self.draw(self.lastPackages)
 
     def scaleTypeComboboxChange(self, event):
@@ -144,8 +152,18 @@ class MainWindow(Tk):
     def __getMaximum(self, dataPackages, valueNumber):
         return max(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
     
+    def __showInvalidInputMessage(self):
+        tkMessageBox.showinfo(invalidInputMessageTitle, invalidInputMessageText)
+    
     def __getInputData(self):
-        self.colorsTableLength = int(self.colorsTableLengthEntry.get())
-        self.colorsTableMinValue = float(self.colorsTableMinEntry.get())
-        self.colorsTableMaxValue = float(self.colorsTableMaxEntry.get())
-            
+        try:
+            self.colorsTableLength = int(self.colorsTableLengthEntry.get())
+            self.colorsTableMinValue = float(self.colorsTableMinEntry.get())
+            self.colorsTableMaxValue = float(self.colorsTableMaxEntry.get())
+        
+            if (self.colorsTableLength < 1 or
+                self.colorsTableMinValue >= self.colorsTableMaxValue):
+                raise
+            return True
+        except:
+            return False
