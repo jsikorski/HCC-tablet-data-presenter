@@ -50,7 +50,7 @@ class MainWindow(Tk):
         self.scaleTypeCombobox.set(scaleTypesComboboxValues[0])
         self.scaleTypeCombobox.bind("<<ComboboxSelected>>", self.scaleTypeComboboxChange)
         self.scaleTypeCombobox.pack(fill=X)
-        self.colorsTableMinLabel = Label(self.colorsSettingsPanel, text=colorsTableMaxLabelText)
+        self.colorsTableMinLabel = Label(self.colorsSettingsPanel, text=colorsTableMinLabelText)
         self.colorsTableMinLabel.pack(fill=X)
         self.colorsTableMinEntry = Entry(self.colorsSettingsPanel)
         self.colorsTableMinEntry.insert(0, defaultColorsTableMin)
@@ -98,13 +98,7 @@ class MainWindow(Tk):
         self.lastPackages = dataPackages
         self.imageCanvas.delete(ALL)
 
-        try:
-            colorsTableLength = int(self.colorsTableLengthEntry.get())
-        except:
-            tkMessageBox.showinfo(errorMessageTitle, errorMessageText)
-            return
-
-        hsv = HSVGradientGenerator(colorsTableLength)
+        hsv = HSVGradientGenerator(self.colorsTableLength)
         minX = self.__getMinimum(dataPackages, dataXNumber)
         minY = self.__getMinimum(dataPackages, dataYNumber)
         maxX = self.__getMaximum(dataPackages, dataXNumber)
@@ -114,15 +108,21 @@ class MainWindow(Tk):
         colorBy = self.colorByCombobox.get()
         if (colorBy != colorByNoneOption):
             colorByNumber = colorByValuesDictionary[colorBy]
-            a = float(self.__getMinimum(dataPackages, colorByNumber))
-            b = float(self.__getMaximum(dataPackages, colorByNumber))
-                
+            if (self.scaleTypeCombobox.get() == relativeScaleType):
+                colorsTableMinValue = float(self.__getMinimum(dataPackages, colorByNumber))
+                colorsTableMaxValue = float(self.__getMaximum(dataPackages, colorByNumber))
+            else:
+                colorsTableMinValue = self.colorsTableMinValue
+                colorsTableMaxValue = self.colorsTableMaxValue
+            
         for package in dataPackages:
             x = (package[dataXNumber] - minX) * ratio
             y = (package[dataYNumber] - minY) * ratio
             
             if (colorBy != colorByNoneOption):
-                color = hsv.getColorByValue(a, b, package[colorByNumber])
+                color = hsv.getColorByValue(colorsTableMinValue, 
+                                            colorsTableMaxValue, 
+                                            package[colorByNumber])
             else:
                 color = (0, 0, 0)
                 
@@ -144,3 +144,8 @@ class MainWindow(Tk):
     def __getMaximum(self, dataPackages, valueNumber):
         return max(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
     
+    def __getInputData(self):
+        self.colorsTableLength = int(self.colorsTableLengthEntry.get())
+        self.colorsTableMinValue = float(self.colorsTableMinEntry.get())
+        self.colorsTableMaxValue = float(self.colorsTableMaxEntry.get())
+            
