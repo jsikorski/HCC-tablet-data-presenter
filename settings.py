@@ -1,6 +1,7 @@
 from localization import colorBySpeedOption, colorByAzimuthOption, colorByAltitudeOption, \
     colorByPressureOption, colorByNoneOption, relativeScaleType,\
     absoluteScaleType
+import sys
 
 windowPadding = 20
 buttonsTextPadding = (5, 5, 5, 5)
@@ -27,3 +28,6 @@ defaultColorsTableMax = 100
 scaleTypesComboboxValues = [relativeScaleType, 
                             absoluteScaleType]
 defaultDrawingColor = "black"
+defaultRejectedMarginValue = 5
+maxint = sys.maxint;
+minint = -sys.maxint - 1;

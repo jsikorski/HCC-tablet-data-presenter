@@ -2,11 +2,9 @@ from Tkinter import Tk, Canvas, LEFT, RIGHT, BOTH, X, ALL, DISABLED, NORMAL
 from ttk import Frame, Button, Style, Combobox, Label, Labelframe, Entry
 from settings import * #@UnusedWildImport
 from localization import * #@UnusedWildImport
-from loaderHTD import DataHTD
 import tkFileDialog
 import tkMessageBox
-from colors import HSVGradientGenerator
-from math import sqrt
+from data import DataController
 
 class MainWindow(Tk):
     def __init__(self):
@@ -15,6 +13,7 @@ class MainWindow(Tk):
         self.resizable(width=0, height=0)
         self.__setStyles()
         self.__initializeComponents()
+        self.__dataController = DataController();
         self.mainloop()
             
     def __initializeComponents(self):
@@ -35,7 +34,14 @@ class MainWindow(Tk):
         self.colorByCombobox = Combobox(self.buttonsFrame, state=DISABLED,
                                         values=colorByComboboxValues)
         self.colorByCombobox.set(colorByComboboxValues[0])
+        self.colorByCombobox.bind("<<ComboboxSelected>>", self.colorByComboboxChange)
         self.colorByCombobox.pack(fill=X, pady=buttonsPadding)
+        self.rejectedMarginLabel = Label(self.buttonsFrame, text=rejectedMarginLabelText)
+        self.rejectedMarginLabel.pack(fill=X)
+        self.rejectedMarginEntry = Entry(self.buttonsFrame)
+        self.rejectedMarginEntry.insert(0, defaultRejectedMarginValue)
+        self.rejectedMarginEntry.config(state=DISABLED)
+        self.rejectedMarginEntry.pack(fill=X, pady=buttonsPadding)        
         
         self.colorsSettingsPanel = Labelframe(self.buttonsFrame, text=visualisationSettingsPanelText)
         self.colorsTableLengthLabel = Label(self.colorsSettingsPanel, text=colorsTableLengthLabelText)
@@ -76,12 +82,12 @@ class MainWindow(Tk):
     def loadFileButtonClick(self):
         fileName = tkFileDialog.askopenfilename(filetypes=[('HTD files', '*.htd')])
         if (fileName):
-            if (not self.__getInputData()):
+            if (not self.__getInputParams()):
                 self.__showInvalidInputMessage()
                 return
             
-            htd = DataHTD(fileName)
-            self.__draw(htd.packages)
+            self.lastFileName = fileName;
+            self.__draw(fileName)
             
             self.redrawButton.config(state=NORMAL)
             self.colorByCombobox.config(state="readonly")
@@ -89,11 +95,11 @@ class MainWindow(Tk):
             self.scaleTypeCombobox.config(state="readonly")
             
     def redrawButtonClick(self):
-        if (not self.__getInputData()):
+        if (not self.__getInputParams()):
             self.__showInvalidInputMessage()
             return
         
-        self.__draw(self.lastPackages)
+        self.__draw(self.lastFileName)
 
     def scaleTypeComboboxChange(self, event):
         if (self.scaleTypeCombobox.get() == relativeScaleType):
@@ -103,54 +109,28 @@ class MainWindow(Tk):
             self.colorsTableMinEntry.config(state=NORMAL)
             self.colorsTableMaxEntry.config(state=NORMAL)
         
-    def __draw(self, dataPackages):
-        self.lastPackages = dataPackages
+    def colorByComboboxChange(self, event):
+        if (self.colorByCombobox.get() == colorByNoneOption):
+            self.rejectedMarginEntry.config(state=DISABLED)
+        else:
+            self.rejectedMarginEntry.config(state=NORMAL)
+        
+    def __draw(self, fileName):
         self.imageCanvas.delete(ALL)
 
-        hsv = HSVGradientGenerator(self.colorsTableLength)
-        minX = self.__getMinimum(dataPackages, dataXNumber)
-        minY = self.__getMinimum(dataPackages, dataYNumber)
-        maxX = self.__getMaximum(dataPackages, dataXNumber)
-        maxY = self.__getMaximum(dataPackages, dataYNumber)
-        ratio = self.__getRatio(minX, minY, maxX, maxY)
-            
-        colorBy = self.colorByCombobox.get()
-        if (colorBy == colorByNoneOption):
-            self.__drawColorByNone(dataPackages, minX, minY, ratio)
-            return
-        if (colorBy == colorBySpeedOption):
-            self.__drawColorBySpeed(dataPackages, minX, minY, ratio, hsv)
-            return
-            
-        colorByNumber = colorByValuesDictionary[colorBy]
+        dataForDrawing = self.__dataController.getDataForDrawing(
+            fileName, self.colorByCombobox.get(), self.colorsTableLength,
+            self.scaleTypeCombobox.get(), self.colorsTableMinValue,
+            self.colorsTableMaxValue)
         
-        if (self.scaleTypeCombobox.get() == relativeScaleType):
-            colorsTableMinValue = float(self.__getMinimum(dataPackages, colorByNumber))
-            colorsTableMaxValue = float(self.__getMaximum(dataPackages, colorByNumber))
-        else:
-            colorsTableMinValue = self.colorsTableMinValue
-            colorsTableMaxValue = self.colorsTableMaxValue
-            
-        for package in dataPackages:
-            x = (package[dataXNumber] - minX) * ratio
-            y = (package[dataYNumber] - minY) * ratio
-            
-            color = hsv.getColorByValue(colorsTableMinValue,
-                                        colorsTableMaxValue,
-                                        package[colorByNumber])
-                
-            tk_rgb = "#%02x%02x%02x" % color
-            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
-
-    def __drawColorByNone(self, dataPackages, minX, minY, ratio):
-        for package in dataPackages:
-            x = (package[dataXNumber] - minX) * ratio
-            y = (package[dataYNumber] - minY) * ratio
-            
-            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=defaultDrawingColor)
+        for package in dataForDrawing:
+            x = package[0];
+            y = package[1];
+            color = package[2];
+            self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=color)
             
     def __drawColorBySpeed(self, dataPackages, minX, minY, ratio, hsv):   
-        allSpeeds = self.__getAllSpeed(dataPackages)
+        allSpeeds = self.__getAllSpeeds(dataPackages)
         minSpeed = min(allSpeeds)
         maxSpeed = max(allSpeeds)
         
@@ -173,63 +153,20 @@ class MainWindow(Tk):
             tk_rgb = "#%02x%02x%02x" % color
             self.imageCanvas.create_line(x, y, x + 1, y + 1, fill=tk_rgb)
             i += 1
-        
-    def __getAllSpeed(self, dataPackages):
-        allSpeeds = []
-        
-        lastPackage = None
-        for package in dataPackages:
-            if (not lastPackage):
-                speed = 0
-            else:
-                currTime = package[dataTimeNumber]
-                currX = package[dataXNumber]
-                currY = package[dataYNumber]
-                lastTime = lastPackage[dataTimeNumber]
-                lastX = lastPackage[dataXNumber]
-                lastY = lastPackage[dataYNumber]
-                dx = self.__getDistance(lastX, lastY, currX, currY)
-                dt = currTime - lastTime
-                if (dt == 0):
-                    speed = 0
-                else:
-                    speed = dx / dt
-                
-            lastPackage = package
-            allSpeeds.append(speed)
-        return allSpeeds
-        
-    def __getDistance(self, firstX, firstY, secondX, secondY):
-        xx = secondX - firstX
-        yy = secondY - firstX
-        return sqrt(pow(xx, 2) + pow(yy, 2))
-
-    def __getRatio(self, minX, minY, maxX, maxY):
-        xLength = maxX - minX
-        yLength = maxY - minY
-        
-        if (xLength > yLength):
-            return float(imageCanvasWidth) / xLength
-        else:
-            return float(windowElementsHeight) / yLength
-
-    def __getMinimum(self, dataPackages, valueNumber):
-        return min(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
             
-    def __getMaximum(self, dataPackages, valueNumber):
-        return max(dataPackages, key=lambda x: x[valueNumber])[valueNumber]
-    
     def __showInvalidInputMessage(self):
         tkMessageBox.showinfo(invalidInputMessageTitle, invalidInputMessageText)
     
-    def __getInputData(self):
+    def __getInputParams(self):
         try:
             self.colorsTableLength = int(self.colorsTableLengthEntry.get())
             self.colorsTableMinValue = float(self.colorsTableMinEntry.get())
             self.colorsTableMaxValue = float(self.colorsTableMaxEntry.get())
+            self.rejectedMargin = float(self.rejectedMarginEntry.get())
         
             if (self.colorsTableLength < 1 or
-                self.colorsTableMinValue >= self.colorsTableMaxValue):
+                self.colorsTableMinValue >= self.colorsTableMaxValue or
+                self.rejectedMargin <= 0 or self.rejectedMargin > 100):
                 raise
             return True
         except:
