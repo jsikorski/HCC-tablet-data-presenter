@@ -121,7 +121,7 @@ class MainWindow(Tk):
         dataForDrawing = self.__dataController.getDataForDrawing(
             fileName, self.colorByCombobox.get(), self.colorsTableLength,
             self.scaleTypeCombobox.get(), self.colorsTableMinValue,
-            self.colorsTableMaxValue)
+            self.colorsTableMaxValue, self.rejectedMargin)
         
         for package in dataForDrawing:
             x = package[0];
@@ -166,7 +166,7 @@ class MainWindow(Tk):
         
             if (self.colorsTableLength < 1 or
                 self.colorsTableMinValue >= self.colorsTableMaxValue or
-                self.rejectedMargin <= 0 or self.rejectedMargin > 100):
+                self.rejectedMargin < 0 or self.rejectedMargin > 100):
                 raise
             return True
         except:

@@ -5,7 +5,8 @@ from colors import HSVGradientGenerator
 
 class DataController(object):
     def getDataForDrawing(self, fileName, colorBy, colorsTableLength, 
-                          scaleType, colorsTableMinValue, colorsTableMaxValue):
+                          scaleType, colorsTableMinValue, 
+                          colorsTableMaxValue, rejectedMargin):
         loader = DataHTD(fileName)
         self.hsv = HSVGradientGenerator(colorsTableLength)
         
@@ -26,7 +27,14 @@ class DataController(object):
             elif (self.colorBy != colorByNoneOption):
                 self.colorsTableMinValue = float(self.__getMinimum(loader.packages, self.colorByNumber))
                 self.colorsTableMaxValue = float(self.__getMaximum(loader.packages, self.colorByNumber))
-            
+        
+        if (self.colorBy != colorByNoneOption and
+            self.colorBy != colorBySpeedOption):
+            loader.packages = self.__filterData(loader.packages, 
+                              self.colorsTableMinValue, 
+                              self.colorsTableMaxValue, 
+                              rejectedMargin)
+        
         minX = maxint;
         minY = maxint;
         maxX = minint;
@@ -119,3 +127,10 @@ class DataController(object):
         xx = secondX - firstX
         yy = secondY - firstX
         return sqrt(pow(xx, 2) + pow(yy, 2))
+    
+    def __filterData(self, packages, minimum, maximum, rejectedMargin):
+        minimumValue = minimum + maximum * rejectedMargin / 100.0
+        maximumValue = maximum - maximum * rejectedMargin / 100.0
+        filteredData = filter(lambda x: x[self.colorByNumber] >= minimumValue and 
+                                        x[self.colorByNumber] <= maximumValue, packages)
+        return filteredData
