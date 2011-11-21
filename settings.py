@@ -14,12 +14,13 @@ buttonsPadding = (0, 15)
 dataTimeNumber = 0
 dataXNumber = 1
 dataYNumber = 2
+dataPressureNumber = 3
 colorByComboboxValues = [colorByNoneOption,
                          colorBySpeedOption,
                          colorByPressureOption,
                          colorByAzimuthOption,
                          colorByAltitudeOption]
-colorByNumbersDictionary = {colorByPressureOption: 3,
+colorByNumbersDictionary = {colorByPressureOption: dataPressureNumber,
                            colorByAzimuthOption: 4,
                            colorByAltitudeOption: 5}
 defaultColorsTableLength = 50
@@ -28,6 +29,6 @@ defaultColorsTableMax = 100
 scaleTypesComboboxValues = [relativeScaleType, 
                             absoluteScaleType]
 defaultDrawingColor = "black"
-defaultRejectedMarginValue = 5
+defaultRejectedValuesPercent = 10
 maxint = sys.maxint;
 minint = -sys.maxint - 1;

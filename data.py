@@ -12,22 +12,28 @@ class MinimalCoordinates(object):
         self.maxY = maxY
 
 class DataController(object):
-    def getDataForDrawing(self, fileName, colorBy, colorsTableLength, 
-                          scaleType, colorsTableMinValue, 
-                          colorsTableMaxValue, rejectedMargin):        
+    def getDataForDrawing(self, fileName, colorBy, colorsTableLength,
+                          scaleType, colorsTableMinValue,
+                          colorsTableMaxValue, rejectedValuesPercent):        
         loader = DataHTD(fileName)
+        touchedPackages = self.__getPackagesWithoutNotTouchedPoints(loader.packages)
         
         if (colorBy == colorByNoneOption):
-            return self.__getDataForColoringByNone(loader.packages)
+            return self.__getDataForColoringByNone(touchedPackages)
         
         self.__hsv = HSVGradientGenerator(colorsTableLength)
         self.__colorsTableMinValue = colorsTableMinValue
         self.__colorsTableMaxValue = colorsTableMaxValue
         
         if (colorBy == colorBySpeedOption):
-            return self.__getDataForColoringBySpeed(loader.packages, scaleType)
+            return self.__getDataForColoringBySpeed(touchedPackages, scaleType,
+                                                    rejectedValuesPercent)
         
-        return self.__getDataForColoringByDictValue(loader.packages, scaleType, colorBy)
+        return self.__getDataForColoringByDictValue(touchedPackages, scaleType,
+                                                    colorBy, rejectedValuesPercent)
+    
+    def __getPackagesWithoutNotTouchedPoints(self, packages):
+        return filter(lambda x: x[dataPressureNumber] > 0, packages)
     
     def __getDataForColoringByNone(self, packages):
         colorsList = self.__getColorsListForColoringByNone(len(packages))
@@ -36,44 +42,51 @@ class DataController(object):
     def __getColorsListForColoringByNone(self, length):
         return [(0, 0, 0) for i in range(0, length)]
     
-    def __getDataForColoringBySpeed(self, packages, scaleType):
+    def __getDataForColoringBySpeed(self, packages, scaleType, rejectedValuesPercent):
         speeds = self.__getAllSpeeds(packages)
-        colorsList = self.__getColorsList(speeds, scaleType)
+        colorsList = self.__getColorsList(speeds, scaleType, rejectedValuesPercent)
         return self.__getDrawingData(packages, colorsList)
     
-    def __getDataForColoringByDictValue(self, packages, scaleType, colorBy):
+    def __getDataForColoringByDictValue(self, packages, scaleType,
+                                        colorBy, rejectedValuesPercent):
         colorByNumber = colorByNumbersDictionary[colorBy]
         choosenList = [x[colorByNumber] for x in packages]     
-        colorsList = self.__getColorsList(choosenList, scaleType)
+        colorsList = self.__getColorsList(choosenList, scaleType, rejectedValuesPercent)
         return self.__getDrawingData(packages, colorsList)
     
-    def __getColorsList(self, valuesList, scaleType):
+    def __getColorsList(self, valuesList, scaleType, rejectedValuesPercent):
+        sortedValuesList = sorted(valuesList)
+        rejectedValuesAmount = len(valuesList) * rejectedValuesPercent / 100.0
+        filteredValuesList = [x for index, x in enumerate(sortedValuesList)
+                                if index > rejectedValuesAmount / 2 and
+                                   index < len(sortedValuesList) - rejectedValuesAmount / 2]
+
         if (scaleType == absoluteScaleType):
             minValue = self.__colorsTableMinValue
             maxValue = self.__colorsTableMaxValue
         else:
-            minValue = float(min(valuesList))
-            maxValue = float(max(valuesList))
+            minValue = float(min(filteredValuesList))
+            maxValue = float(max(filteredValuesList))
         
-        colorsList = []
-        for speed in valuesList:
-            colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, speed))
+        colorsList = [(0, 0, 255) for i in range(0, int(rejectedValuesAmount / 2))] #@UnusedVariable
+        for value in valuesList:
+            if (filteredValuesList.count(value) > 0):
+                colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, value))
+        colorsList += [(255, 0, 0) for i in range(0, len(valuesList) - len(colorsList))] #@UnusedVariable
         return colorsList
     
     def __getDrawingData(self, packages, colorsList):
         minimalCoordinates = self.__getMinimalCoordinates(packages)
-        ratio = self.__getRatio(minimalCoordinates.minX, 
-                                minimalCoordinates.minY, 
-                                minimalCoordinates.maxX, 
+        ratio = self.__getRatio(minimalCoordinates.minX,
+                                minimalCoordinates.minY,
+                                minimalCoordinates.maxX,
                                 minimalCoordinates.maxY)
-        i = 0;
         drawingData = [];
-        for package in packages:
+        for i, package in enumerate(packages):
             drawingX = (package[dataXNumber] - minimalCoordinates.minX) * ratio
             drawingY = (package[dataYNumber] - minimalCoordinates.minY) * ratio
             color = self.__transformRGBToTkColor(colorsList[i])
             drawingData.append((drawingX, drawingY, color))
-            i += 1            
         return drawingData;
 
     def __getMinimalCoordinates(self, packages):
@@ -98,6 +111,7 @@ class DataController(object):
         return "#%02x%02x%02x" % color
         
     def __getAllSpeeds(self, dataPackages):
+        dataPackages.sort(key=lambda x: x[dataTimeNumber])
         allSpeeds = []
         
         lastPackage = None
@@ -117,7 +131,7 @@ class DataController(object):
                     speed = 0
                 else:
                     speed = dx / dt
-                
+                                
             lastPackage = package
             allSpeeds.append(speed)
         return allSpeeds
@@ -141,10 +155,3 @@ class DataController(object):
         xx = secondX - firstX
         yy = secondY - firstX
         return sqrt(pow(xx, 2) + pow(yy, 2))
-    
-    def __filterData(self, packages, minimum, maximum, rejectedMargin):
-        minimumValue = minimum + maximum * rejectedMargin / 100.0
-        maximumValue = maximum - maximum * rejectedMargin / 100.0
-        filteredData = filter(lambda x: x[self.colorByNumber] >= minimumValue and 
-                                        x[self.colorByNumber] <= maximumValue, packages)
-        return filteredData

@@ -36,12 +36,12 @@ class MainWindow(Tk):
         self.colorByCombobox.set(colorByComboboxValues[0])
         self.colorByCombobox.bind("<<ComboboxSelected>>", self.colorByComboboxChange)
         self.colorByCombobox.pack(fill=X, pady=buttonsPadding)
-        self.rejectedMarginLabel = Label(self.buttonsFrame, text=rejectedMarginLabelText)
-        self.rejectedMarginLabel.pack(fill=X)
-        self.rejectedMarginEntry = Entry(self.buttonsFrame)
-        self.rejectedMarginEntry.insert(0, defaultRejectedMarginValue)
-        self.rejectedMarginEntry.config(state=DISABLED)
-        self.rejectedMarginEntry.pack(fill=X, pady=buttonsPadding)        
+        self.rejectedValuesPercentLabel = Label(self.buttonsFrame, text=rejectedMarginLabelText)
+        self.rejectedValuesPercentLabel.pack(fill=X)
+        self.rejectedValuesPercentEntry = Entry(self.buttonsFrame)
+        self.rejectedValuesPercentEntry.insert(0, defaultRejectedValuesPercent)
+        self.rejectedValuesPercentEntry.config(state=DISABLED)
+        self.rejectedValuesPercentEntry.pack(fill=X, pady=buttonsPadding)        
         
         self.colorsSettingsPanel = Labelframe(self.buttonsFrame, text=visualisationSettingsPanelText)
         self.colorsTableLengthLabel = Label(self.colorsSettingsPanel, text=colorsTableLengthLabelText)
@@ -111,9 +111,9 @@ class MainWindow(Tk):
         
     def colorByComboboxChange(self, event):
         if (self.colorByCombobox.get() == colorByNoneOption):
-            self.rejectedMarginEntry.config(state=DISABLED)
+            self.rejectedValuesPercentEntry.config(state=DISABLED)
         else:
-            self.rejectedMarginEntry.config(state=NORMAL)
+            self.rejectedValuesPercentEntry.config(state=NORMAL)
         
     def __draw(self, fileName):
         self.imageCanvas.delete(ALL)
@@ -121,7 +121,7 @@ class MainWindow(Tk):
         dataForDrawing = self.__dataController.getDataForDrawing(
             fileName, self.colorByCombobox.get(), self.colorsTableLength,
             self.scaleTypeCombobox.get(), self.colorsTableMinValue,
-            self.colorsTableMaxValue, self.rejectedMargin)
+            self.colorsTableMaxValue, self.rejectedValuesPercent)
         
         for package in dataForDrawing:
             x = package[0];
@@ -162,11 +162,11 @@ class MainWindow(Tk):
             self.colorsTableLength = int(self.colorsTableLengthEntry.get())
             self.colorsTableMinValue = float(self.colorsTableMinEntry.get())
             self.colorsTableMaxValue = float(self.colorsTableMaxEntry.get())
-            self.rejectedMargin = float(self.rejectedMarginEntry.get())
+            self.rejectedValuesPercent = float(self.rejectedValuesPercentEntry.get())
         
             if (self.colorsTableLength < 1 or
                 self.colorsTableMinValue >= self.colorsTableMaxValue or
-                self.rejectedMargin < 0 or self.rejectedMargin > 100):
+                self.rejectedValuesPercent < 0 or self.rejectedValuesPercent >= 100):
                 raise
             return True
         except:
