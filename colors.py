@@ -11,6 +11,8 @@ class HSVGradientGenerator(object):
             return (0, 0, 0)
         if (value < minValue):
             return (255, 255, 255)
+        if (maxValue == minValue):
+            return (0, 0, 255)
         
         a = (self.listLength - 1) / (maxValue - minValue)
         b = -a * minValue

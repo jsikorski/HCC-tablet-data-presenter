@@ -57,22 +57,26 @@ class DataController(object):
     def __getColorsList(self, valuesList, scaleType, rejectedValuesPercent):
         sortedValuesList = sorted(valuesList)
         rejectedValuesAmount = len(valuesList) * rejectedValuesPercent / 100.0
-        filteredValuesList = [x for index, x in enumerate(sortedValuesList)
-                                if index > rejectedValuesAmount / 2 and
-                                   index < len(sortedValuesList) - rejectedValuesAmount / 2]
+        minAllowedValue = sortedValuesList[int(rejectedValuesAmount / 2)]
+        maxAllowedValue = sortedValuesList[int(len(sortedValuesList) - rejectedValuesAmount / 2) - 1]
 
         if (scaleType == absoluteScaleType):
             minValue = self.__colorsTableMinValue
             maxValue = self.__colorsTableMaxValue
         else:
-            minValue = float(min(filteredValuesList))
-            maxValue = float(max(filteredValuesList))
+            minValue = float(minAllowedValue)
+            maxValue = float(maxAllowedValue)
         
-        colorsList = [(0, 0, 255) for i in range(0, int(rejectedValuesAmount / 2))] #@UnusedVariable
+        colorsList = []
         for value in valuesList:
-            if (filteredValuesList.count(value) > 0):
+            if (value < minAllowedValue):
+                colorsList.append((0, 0, 255))
+                continue
+            if (value > maxAllowedValue):
+                colorsList.append((255, 0, 0))
+                continue
+            if (value >= minValue and value <= maxValue):
                 colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, value))
-        colorsList += [(255, 0, 0) for i in range(0, len(valuesList) - len(colorsList))] #@UnusedVariable
         return colorsList
     
     def __getDrawingData(self, packages, colorsList):
@@ -153,5 +157,5 @@ class DataController(object):
         
     def __getDistance(self, firstX, firstY, secondX, secondY):
         xx = secondX - firstX
-        yy = secondY - firstX
+        yy = secondY - firstY
         return sqrt(pow(xx, 2) + pow(yy, 2))
