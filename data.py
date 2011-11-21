@@ -27,54 +27,7 @@ class DataController(object):
         if (colorBy == colorBySpeedOption):
             return self.__getDataForColoringBySpeed(loader.packages, scaleType)
         
-        
-        
-#        self.__hsv = HSVGradientGenerator(colorsTableLength)        
-#        self.speeds = self.__getAllSpeeds(loader.packages)
-#        
-#        self.colorBy = colorBy;
-#        if (self.colorBy != colorByNoneOption and
-#            self.colorBy != colorBySpeedOption):
-#            self.colorByNumber = colorByValuesDictionary[self.colorBy]
-#        
-#        if (scaleType == absoluteScaleType):
-#            self.colorsTableMinValue = colorsTableMinValue
-#            self.colorsTableMaxValue = colorsTableMaxValue
-#        else:
-#            if (self.colorBy == colorBySpeedOption):
-#                self.colorsTableMinValue = min(self.speeds)
-#                self.colorsTableMaxValue = max(self.speeds)
-#            elif (self.colorBy != colorByNoneOption):
-#                self.colorsTableMinValue = float(self.__getMinimum(loader.packages, self.colorByNumber))
-#                self.colorsTableMaxValue = float(self.__getMaximum(loader.packages, self.colorByNumber))
-#        
-#        if (self.colorBy != colorByNoneOption and
-#            self.colorBy != colorBySpeedOption):
-#            loader.packages = self.__filterData(loader.packages, 
-#                              self.colorsTableMinValue, 
-#                              self.colorsTableMaxValue, 
-#                              rejectedMargin)
-#            self.colorsTableMinValue = float(self.__getMinimum(loader.packages, self.colorByNumber))
-#            self.colorsTableMaxValue = float(self.__getMaximum(loader.packages, self.colorByNumber))
-#            
-#        minX = maxint;
-#        minY = maxint;
-#        maxX = minint;
-#        maxY = minint;
-#        for package in loader.packages:
-#            currX = package[dataXNumber]
-#            currY = package[dataYNumber]
-#            if (currX < minX):
-#                minX = currX
-#            if (currX > maxX):
-#                maxX = currX
-#            if (currY < minY):
-#                minY = currY
-#            if (currY > maxY):
-#                maxY = currY
-#        
-#        ratio = self.__getRatio(minX, minY, maxX, maxY)
-#        return self.__getDrawingData(loader.packages, minX, minY, ratio)
+        return self.__getDataForColoringByDictValue(loader.packages, scaleType, colorBy)
     
     def __getDataForColoringByNone(self, packages):
         colorsList = self.__getColorsListForColoringByNone(len(packages))
@@ -85,19 +38,25 @@ class DataController(object):
     
     def __getDataForColoringBySpeed(self, packages, scaleType):
         speeds = self.__getAllSpeeds(packages)
+        colorsList = self.__getColorsList(speeds, scaleType)
+        return self.__getDrawingData(packages, colorsList)
+    
+    def __getDataForColoringByDictValue(self, packages, scaleType, colorBy):
+        colorByNumber = colorByNumbersDictionary[colorBy]
+        choosenList = [x[colorByNumber] for x in packages]     
+        colorsList = self.__getColorsList(choosenList, scaleType)
+        return self.__getDrawingData(packages, colorsList)
+    
+    def __getColorsList(self, valuesList, scaleType):
         if (scaleType == absoluteScaleType):
             minValue = self.__colorsTableMinValue
             maxValue = self.__colorsTableMaxValue
         else:
-            minValue = min(speeds)
-            maxValue = max(speeds)
+            minValue = float(min(valuesList))
+            maxValue = float(max(valuesList))
         
-        colorsList = self.__getColorsListForColoringBySpeed(speeds, minValue, maxValue)
-        return self.__getDrawingData(packages, colorsList)
-    
-    def __getColorsListForColoringBySpeed(self, speedsList, minValue, maxValue):
         colorsList = []
-        for speed in speedsList:
+        for speed in valuesList:
             colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, speed))
         return colorsList
     
@@ -135,23 +94,6 @@ class DataController(object):
                 maxY = currY
         return MinimalCoordinates(minX, minY, maxX, maxY)
 
-    #TODO
-    
-    def __getDrawingColor(self, package, packageIndex):
-        if (self.colorBy == colorByNoneOption):
-            color = (0, 0, 0)
-        else:
-            if (self.colorBy == colorBySpeedOption):
-                speed = self.speeds[packageIndex]
-                color = self.__hsv.getColorByValue(self.colorsTableMinValue, 
-                                                 self.colorsTableMaxValue, 
-                                                 speed)
-            else:
-                color = self.__hsv.getColorByValue(self.colorsTableMinValue, 
-                                                 self.colorsTableMaxValue, 
-                                                 package[self.colorByNumber])
-        return self.__transformRGBToTkColor(color)
-    
     def __transformRGBToTkColor(self, color):
         return "#%02x%02x%02x" % color
         

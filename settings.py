@@ -19,7 +19,7 @@ colorByComboboxValues = [colorByNoneOption,
                          colorByPressureOption,
                          colorByAzimuthOption,
                          colorByAltitudeOption]
-colorByValuesDictionary = {colorByPressureOption: 3,
+colorByNumbersDictionary = {colorByPressureOption: 3,
                            colorByAzimuthOption: 4,
                            colorByAltitudeOption: 5}
 defaultColorsTableLength = 50
