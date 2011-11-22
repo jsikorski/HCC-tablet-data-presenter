@@ -2,6 +2,7 @@ from settings import * #@UnusedWildImport
 from math import sqrt; #@UnusedImport
 from loaderHTD import DataHTD
 from colors import HSVGradientGenerator
+import math
 
 class MinimalCoordinates(object):
     __slots__ = ["minX", "minY", "maxX", "maxY"]
@@ -11,7 +12,7 @@ class MinimalCoordinates(object):
         self.maxX = maxX
         self.maxY = maxY
 
-class DataController(object):
+class DataController(object):    
     def getDataForDrawing(self, fileName, colorBy, colorsTableLength,
                           scaleType, colorsTableMinValue,
                           colorsTableMaxValue, rejectedValuesPercent):        
@@ -158,3 +159,121 @@ class DataController(object):
         xx = secondX - firstX
         yy = secondY - firstY
         return sqrt(pow(xx, 2) + pow(yy, 2))
+    
+    def getMeasure(self, fileName):
+        loader = DataHTD(fileName)
+        
+        touchedPackages = self.__getPackagesWithoutNotTouchedPoints(loader.packages)
+        
+        distancesSum = self.__getSumOfAllDistances(touchedPackages)
+        
+        timesList = [package[dataTimeNumber] for package in touchedPackages]
+        timesSum = sum(timesList)
+        
+        pressuresList = self.__getSubListFromPackages(touchedPackages, dataPressureNumber)
+        pressuresAverage = self.__getAverage(pressuresList)
+        
+        azimuthsList = self.__getSubListFromPackages(touchedPackages, 4)
+        numberOfChanges = 0
+        lastAzimuth = 0
+        for azimuth in azimuthsList:
+            if (abs(lastAzimuth - azimuth) > 1800):
+                numberOfChanges += 1
+            lastAzimuth = azimuth
+        
+        return (distancesSum / 1000 + timesSum / 10000000 - 1.5 * 
+                pressuresAverage - 10 * numberOfChanges) / 100 * 99 + 1000
+    
+    def saveParamsFromAllFiles(self):
+        target = open("results.csv", "w")
+        file1 = open("dane/przedP.namesX")
+        file2 = open("dane/poP.namesX")
+        file3 = open("dane/zdrowiP.namesX")
+        
+        lines1 = file1.readlines()
+        for line in lines1:
+            self.__saveParams(target, "dane/" + line.rstrip(), "przedP")
+            target.write("\n")
+        target.write("\n")
+        
+        lines2 = file2.readlines()
+        for line in lines2:
+            self.__saveParams(target, "dane/" + line.rstrip(), "poP")
+            target.write("\n")
+        target.write("\n")
+        
+        lines3 = file3.readlines()
+        for line in lines3:
+            self.__saveParams(target, "dane/" + line.rstrip(), "zdrowiP")    
+            target.write("\n")
+        target.write("\n")
+        
+        file4 = open("dane/przedT.namesX")
+        file5 = open("dane/poT.namesX")
+        file6 = open("dane/zdrowiT.namesX")
+        
+        lines4 = file4.readlines()
+        for line in lines4:
+            self.__saveParams(target, "dane/" + line.rstrip(), "przedT")
+            target.write("\n")
+        target.write("\n")
+        
+        lines5 = file5.readlines()
+        for line in lines5:
+            self.__saveParams(target, "dane/" + line.rstrip(), "poT")
+            target.write("\n")
+        target.write("\n")
+        
+        lines6 = file6.readlines()
+        for line in lines6:
+            self.__saveParams(target, "dane/" + line.rstrip(), "zdrowiT")    
+            target.write("\n")
+        target.write("\n")
+    
+    def __saveParams(self, targetFile, fileName, packageName):
+        targetFile.write(packageName + ";")
+        
+        loader = DataHTD(fileName)
+        targetFile.write(fileName + ";")
+        
+        touchedPackages = self.__getPackagesWithoutNotTouchedPoints(loader.packages)
+        
+        distancesSum = self.__getSumOfAllDistances(touchedPackages)
+        targetFile.write(str(distancesSum) + ";")
+        
+        timesList = [package[dataTimeNumber] for package in touchedPackages]
+        timesSum = sum(timesList)
+        targetFile.write(str(timesSum) + ";")
+        
+        pressuresList = self.__getSubListFromPackages(touchedPackages, dataPressureNumber)
+        pressuresAverage = self.__getAverage(pressuresList)
+        targetFile.write(str(pressuresAverage) + ";")
+        
+        azimuthsList = self.__getSubListFromPackages(touchedPackages, 4)
+        numberOfChanges = 0
+        lastAzimuth = 0
+        for azimuth in azimuthsList:
+            if (abs(lastAzimuth - azimuth) > 1800):
+                numberOfChanges += 1
+            lastAzimuth = azimuth
+        targetFile.write(str(numberOfChanges) + ";")
+#        
+#        return (distancesSum / 1000 + timesSum / 10000000 - 1.5 * pressuresAverage - 10 * numberOfChanges) / 100 * 99 + 1000   
+        
+    def __getAverage(self, dataList):
+        return sum(dataList) / len(dataList)
+    
+    def __getSubListFromPackages(self, dataPackages, listNumber):
+        return [package[listNumber] for package in dataPackages]
+    
+    def __getSumOfAllDistances(self, dataPackages):
+        xList = [package[dataXNumber] for package in dataPackages]
+        yList = [package[dataYNumber] for package in dataPackages]
+        
+        distancesSum = 0
+        for i, x in enumerate(xList):
+            if (i == len(xList) - 1):
+                break;
+            distancesSum += self.__getDistance(xList[i], yList[i], 
+                                               xList[i + 1], yList[i + 1])
+        return distancesSum

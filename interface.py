@@ -34,7 +34,7 @@ class MainWindow(Tk):
         self.colorByCombobox = Combobox(self.buttonsFrame, state=DISABLED,
                                         values=colorByComboboxValues)
         self.colorByCombobox.set(colorByComboboxValues[0])
-        self.colorByCombobox.bind("<<ComboboxSelected>>", self.colorByComboboxChange)
+        self.colorByCombobox.bind("<<ComboboxSelected>>", self.__colorByComboboxChange)
         self.colorByCombobox.pack(fill=X, pady=buttonsPadding)
         self.rejectedValuesPercentLabel = Label(self.buttonsFrame, text=rejectedMarginLabelText)
         self.rejectedValuesPercentLabel.pack(fill=X)
@@ -55,7 +55,7 @@ class MainWindow(Tk):
         self.scaleTypeCombobox = Combobox(self.colorsSettingsPanel, state=DISABLED,
                                           values=scaleTypesComboboxValues)
         self.scaleTypeCombobox.set(scaleTypesComboboxValues[0])
-        self.scaleTypeCombobox.bind("<<ComboboxSelected>>", self.scaleTypeComboboxChange)
+        self.scaleTypeCombobox.bind("<<ComboboxSelected>>", self.__scaleTypeComboboxChange)
         self.scaleTypeCombobox.pack(fill=X)
         self.colorsTableMinLabel = Label(self.colorsSettingsPanel, text=colorsTableMinLabelText)
         self.colorsTableMinLabel.pack(fill=X)
@@ -72,7 +72,7 @@ class MainWindow(Tk):
         self.colorsSettingsPanel.pack(fill=X, pady=buttonsPadding)
         
         self.redrawButton = Button(master=self.buttonsFrame, text=redrawButtonText,
-                                   state=DISABLED, command=self.redrawButtonClick)
+                                   state=DISABLED, command=self.__redrawButtonClick)
         self.redrawButton.pack(fill=X, pady=buttonsPadding)
         self.buttonsFrame.pack(side=RIGHT, padx=windowPadding, pady=windowPadding, fill=BOTH)
         
@@ -87,21 +87,24 @@ class MainWindow(Tk):
                 return
             
             self.lastFileName = fileName;
+            self.title(mainWindowTitle + " " + fileName)
             self.__draw(fileName)
+            tkMessageBox.showinfo(measureDialogTitle, 
+                                  measureDialogText + str(self.__dataController.getMeasure(fileName)))
             
             self.redrawButton.config(state=NORMAL)
             self.colorByCombobox.config(state="readonly")
             self.colorsTableLengthEntry.config(state=NORMAL)
             self.scaleTypeCombobox.config(state="readonly")
             
-    def redrawButtonClick(self):
+    def __redrawButtonClick(self):
         if (not self.__getInputParams()):
             self.__showInvalidInputMessage()
             return
         
         self.__draw(self.lastFileName)
 
-    def scaleTypeComboboxChange(self, event):
+    def __scaleTypeComboboxChange(self, event):
         if (self.scaleTypeCombobox.get() == relativeScaleType):
             self.colorsTableMinEntry.config(state=DISABLED)
             self.colorsTableMaxEntry.config(state=DISABLED)
@@ -109,7 +112,7 @@ class MainWindow(Tk):
             self.colorsTableMinEntry.config(state=NORMAL)
             self.colorsTableMaxEntry.config(state=NORMAL)
         
-    def colorByComboboxChange(self, event):
+    def __colorByComboboxChange(self, event):
         if (self.colorByCombobox.get() == colorByNoneOption):
             self.rejectedValuesPercentEntry.config(state=DISABLED)
         else:
