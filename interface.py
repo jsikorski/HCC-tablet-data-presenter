@@ -80,7 +80,7 @@ class MainWindow(Tk):
         Style().configure("TButton", padding=buttonsTextPadding, font=buttonsFont)
     
     def loadFileButtonClick(self):
-        fileName = tkFileDialog.askopenfilename(filetypes=[('HTD files', '*.htd')])
+        fileName = tkFileDialog.askopenfilename(filetypes=[('Tablet files', '*.mtb'), ('Tablet files', '*.htd')])
         if (fileName):
             if (not self.__getInputParams()):
                 self.__showInvalidInputMessage()

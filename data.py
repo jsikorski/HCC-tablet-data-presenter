@@ -75,8 +75,7 @@ class DataController(object):
             if (value > maxAllowedValue):
                 colorsList.append((255, 0, 0))
                 continue
-            if (value >= minValue and value <= maxValue):
-                colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, value))
+            colorsList.append(self.__hsv.getColorByValue(minValue, maxValue, value))
         return colorsList
     
     def __getDrawingData(self, packages, colorsList):

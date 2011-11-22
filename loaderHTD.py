@@ -45,4 +45,4 @@ class DataHTD:
         for x in xrange(self.noPackage):
             self.packages += (struct.unpack("6i", self.data[off:off+6*4]),)
             off += 6*4
-        noLabels = struct.unpack("i", self.data[off:off+4])
+#        noLabels = struct.unpack("i", self.data[off:off+4])
